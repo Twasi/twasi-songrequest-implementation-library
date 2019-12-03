@@ -4,7 +4,8 @@
   "description": "",
   "main": "src/TSRI.ts",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "dev": "webpack --watch"
   },
   "author": "Merlin Westphal",
   "license": "MIT",
