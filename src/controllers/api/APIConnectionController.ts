@@ -1,6 +1,6 @@
-import * as ReconnectingWebSocket from '../../providers/reconnecting-websocket/reconnecting-websocket.min';
+import * as ReconnectingWebSocket from '../../../providers/reconnecting-websocket/reconnecting-websocket.min';
 
-export class APIConnection {
+export class APIConnectionController {
     public readonly requests: APIRequestManager;
 
     private readonly client: WebSocket;
@@ -19,8 +19,8 @@ export class APIConnection {
     }
 
     private async authorize() {
-        const result = await this.requests.request({topic: 'auth', scope: "action", action: {type: 'JWT_TOKEN', token: this.jwt}});
-        console.log(result);
+        const response = await this.requests.request({topic: 'auth', scope: "action", action: {type: 'JWT_TOKEN', token: this.jwt}});
+        this.statusListener.statusChanged(response.status === 'success' ? APIConnectionStatus.CONNECTED : APIConnectionStatus.UNAUTHORIZED);
     }
 }
 
@@ -50,7 +50,7 @@ export class APIRequestManager {
         this.client.onmessage = (msg) => {
             const ob = JSON.parse(msg.data) as any;
             if (this.pending.has(ob.ref)) {
-                this.pending.get(ob.ref)(ob);
+                this.pending.get(ob.ref)(ob.result);
                 this.pending.delete(ob.ref);
             }
         }

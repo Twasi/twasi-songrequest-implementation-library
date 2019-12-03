@@ -8,5 +8,6 @@ export interface TSRIEvents {
     initialized: (status: InitializationStatus) => void,
     volume: (newVolume: number) => void,
     position: (newPosition: number) => void,
-    song: (song: Song) => void
+    song: (song: Song) => void,
+    enableSpotifyAuth: (enable: boolean) => void
 }
