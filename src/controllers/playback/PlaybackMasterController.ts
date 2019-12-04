@@ -2,7 +2,7 @@ import {SpotifyPlaybackController} from "./SpotifyPlaybackController";
 import {YoutTubePlaybackController} from "./YoutTubePlaybackController";
 import {APIConnectionController} from "../api/APIConnectionController";
 import {Song} from "../../models/Song";
-import {Provider} from "../../models/Provider";
+import {PlaybackProvider} from "../../models/PlaybackProvider";
 import {PlaybackSlaveController} from "./PlaybackSlaveController";
 import {TSRIEvents} from "../../models/Events";
 
@@ -18,18 +18,18 @@ export class PlaybackMasterController {
         this.posPredicter = new PositionPredicter(frontendEvents.position);
         this.spotify = new SpotifyPlaybackController({
             onPause: () => {
-                if (this.song.provider !== Provider.SPOTIFY) return;
+                if (this.song.provider !== PlaybackProvider.SPOTIFY) return;
                 this.posPredicter.predict = false;
                 this.frontendEvents.stop();
             }, onPlay: () => {
-                if (this.song.provider !== Provider.SPOTIFY) {
+                if (this.song.provider !== PlaybackProvider.SPOTIFY) {
                     this.spotify.pause();
                     return;
                 }
                 this.posPredicter.predict = true;
                 this.frontendEvents.play();
             }, onPositionChange: (p1: number, p2: number) => {
-                if (this.song.provider !== Provider.SPOTIFY) return;
+                if (this.song.provider !== PlaybackProvider.SPOTIFY) return;
                 this.posPredicter.setPosition(p1, p2);
             }
         }, api);
@@ -46,14 +46,14 @@ export class PlaybackMasterController {
         if(this.song) this.getSlaveControllerByProvider(this.song.provider).pause();
     }
 
-    private getSlaveControllerByProvider(provider: Provider): PlaybackSlaveController {
+    private getSlaveControllerByProvider(provider: PlaybackProvider): PlaybackSlaveController {
         switch (provider) {
-            case Provider.NONE:
+            case PlaybackProvider.NONE:
             default:
                 return null;
-            case Provider.SPOTIFY:
+            case PlaybackProvider.SPOTIFY:
                 return this.spotify;
-            case Provider.YOUTUBE:
+            case PlaybackProvider.YOUTUBE:
                 return this.youtube;
         }
     }

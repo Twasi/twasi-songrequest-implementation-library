@@ -13,7 +13,7 @@ export class TSRIController {
     private playback: PlaybackMasterController;
 
     public init(jwt: string, api: string, events: TSRIEvents = null) {
-        if(events) this.events = events;
+        if (events != null) this.events = events;
         this.API = new APIConnectionController(api, jwt, {
             statusChanged: async status => {
                 this.status.api = status === 0;
