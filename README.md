@@ -18,14 +18,6 @@ This project has the following libraries as dependency:
 
 ---
 
-#### [reconnecting-websocket](https://github.com/joewalnes/reconnecting-websocket) 
-
-By [joewalnes](https://github.com/joewalnes)
-
-License: [MIT](/providers/reconnecting-websocket/LICENSE.txt)
-
----
-
 #### [YouTube Player API](https://developers.google.com/youtube/iframe_api_reference) 
 
 By [Google](https://developers.google.com/)
