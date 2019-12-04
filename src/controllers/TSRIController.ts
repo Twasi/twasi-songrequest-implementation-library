@@ -58,7 +58,6 @@ const defaultEvents: TSRIEvents = {
         console.log("Spotify Authentication is now %s.", (p1 ? "enabled" : "disabled"));
     },
     initialized: function (p1: InitializationStatus) {
-        console.log("STATUS: " + p1)
     }, pause: function () {
         console.log("PAUSE");
     }, play: function () {
@@ -66,7 +65,7 @@ const defaultEvents: TSRIEvents = {
     }, position: function (p1: number) {
         console.log("POS: " + p1)
     }, song: function (p1: Song) {
-        console.log("SONG: " + p1)
+        console.log("SONG: " + p1.name)
     }, stop: function () {
         console.log("STOP")
     }, volume: function (p1: number) {

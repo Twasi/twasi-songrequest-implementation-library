@@ -86,5 +86,9 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
     setVolume(volume: number): void {
         this.player.setVolume(volume);
     }
+
+    resume(): void {
+        this.player.resume();
+    }
 }
 

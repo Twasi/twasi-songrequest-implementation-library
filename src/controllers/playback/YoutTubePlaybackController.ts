@@ -16,4 +16,7 @@ export class YoutTubePlaybackController extends PlaybackSlaveController {
     setVolume(volume: number): void {
     }
 
+    resume(): void {
+    }
+
 }

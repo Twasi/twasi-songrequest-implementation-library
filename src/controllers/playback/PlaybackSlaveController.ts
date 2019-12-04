@@ -9,6 +9,8 @@ export abstract class PlaybackSlaveController {
 
     public abstract setVolume(volume: number): void;
 
+    public abstract resume(): void;
+
     constructor(protected events: PlaybackSlaveEvents) {
     }
 }

@@ -36,10 +36,12 @@ export class PlaybackMasterController {
         this.youtube = new YoutTubePlaybackController(null);
     }
 
-    public play(song: Song) {
-        if (this.song) this.getSlaveControllerByProvider(this.song.provider).pause();
-        this.song = song;
-        this.getSlaveControllerByProvider(song.provider).play(song);
+    public play(song?: Song) {
+        if(song) {
+            if (this.song) this.getSlaveControllerByProvider(this.song.provider).pause();
+            this.song = song;
+            this.getSlaveControllerByProvider(song.provider).play(song);
+        } else if(this.song) this.getSlaveControllerByProvider(this.song.provider).resume();
     }
 
     public pause() {
