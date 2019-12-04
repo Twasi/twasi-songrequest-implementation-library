@@ -6,45 +6,50 @@ import {SpotifyAuthenticationController} from "./spotify/SpotifyAuthenticationCo
 import {PlaybackMasterController} from "./playback/PlaybackMasterController";
 
 export class TSRIController {
-    private events: TSRIEvents = defaultEvents;
     private status: InitializationStatus = defaultStatus;
     private API: APIConnectionController;
     private spotifyAuth: SpotifyAuthenticationController;
     private playback: PlaybackMasterController;
+    private events: TSRIEvents;
 
-    public init(jwt: string, api: string, events: TSRIEvents = null) {
-        if (events != null) this.events = events;
+    public init(jwt: string, api: string, events: TSRIEvents) {
+        this.events = events;
         this.API = new APIConnectionController(api, jwt, {
             statusChanged: async status => {
                 this.status.api = status === 0;
-                this.events.initialized(this.status);
+                this.e().initialized(this.status);
                 if (this.status.api) await this.spotifyAuth.get();
             }
         });
-        this.playback = new PlaybackMasterController(this.API, this.events);
+        this.playback = new PlaybackMasterController(this.API, events);
         this.spotifyAuth = new SpotifyAuthenticationController(this.API, {
             statusChanged: this.spotifyStatus,
             spotifyAuthenticated: (authenticated: boolean, token?: string) => {
-                this.events.enableSpotifyAuth(!authenticated);
+                this.e().enableSpotifyAuth(!authenticated);
                 if (token) this.playback.spotify.init(token);
             }
         });
-        this.events.initialized(this.status);
+        this.e().initialized(this.status);
     }
 
     public spotifyStatus(status: boolean) {
         this.status.spotify = status;
-        this.events.initialized(this.status);
+        this.e().initialized(this.status);
     }
 
     public youtubeStatus(status: boolean) {
         this.status.youtube = status;
-        this.events.initialized(this.status);
+        this.e().initialized(this.status);
     }
 
     public spotifyApiReady() {
         this.status.spotifyApi = true;
-        this.events.initialized(this.status);
+        this.e().initialized(this.status);
+    }
+
+    private e() {
+        if (this.events) return this.events;
+        return defaultEvents;
     }
 }
 
