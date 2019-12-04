@@ -1,0 +1,12 @@
+body.ready #init {
+    display: none;
+}
+
+body:not(.ready) #player {
+    display: none;
+}
+
+#slider {
+    width: 80%;
+    margin: 10%;
+}

@@ -12,6 +12,11 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
 
     constructor(protected events: PlaybackSlaveEvents, private api: APIConnectionController) {
         super(events);
+        const permaUpdate = async () => {
+            await this.positionUpdate();
+            setTimeout(permaUpdate, 500);
+        };
+        permaUpdate().then();
     }
 
     public init(token: string) {
@@ -38,7 +43,7 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
         });
 
         // Playback status updates
-        player.addListener('player_state_changed', (state: any) => {
+        player.addListener('player_state_changed', async (state: any) => {
             if (state.position && state.duration)
                 this.events.onPositionChange(state.position, state.duration);
             if (state.paused)
@@ -89,6 +94,14 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
 
     resume(): void {
         this.player.resume();
+    }
+
+    private async positionUpdate() {
+        try {
+            let state = await this.player.getCurrentState();
+            if (state) this.events.onPositionChange(state.position, state.duration);
+        } catch (e) {
+        }
     }
 }
 

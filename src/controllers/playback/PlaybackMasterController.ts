@@ -70,7 +70,9 @@ class PositionPredicter {
 
     constructor(callback: (position: number) => void) {
         const predict = () => {
-            if (this.predict) this.prediction = (this.position + (Date.now() - this.lastPosition)) / this.duration;
+            let prediction;
+            if (this.predict) prediction = (this.position + (Date.now() - this.lastPosition)) / this.duration;
+            if(typeof prediction === "number") this.prediction = prediction > 1 ? 1 : prediction;
             callback(this.prediction);
             setTimeout(predict, 500);
         };
