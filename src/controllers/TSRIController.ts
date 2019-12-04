@@ -21,7 +21,7 @@ export class TSRIController {
                 if (this.status.api) await this.spotifyAuth.get();
             }
         });
-        this.playback = new PlaybackMasterController(this.API, events);
+        this.playback = new PlaybackMasterController(this.API, events, this.status);
         this.spotifyAuth = new SpotifyAuthenticationController(this.API, {
             statusChanged: this.spotifyStatus,
             spotifyAuthenticated: (authenticated: boolean, token?: string) => {
@@ -37,8 +37,8 @@ export class TSRIController {
         this.e().initialized(this.status);
     }
 
-    public youtubeStatus(status: boolean) {
-        this.status.youtube = status;
+    public youtubeApiReady() {
+        this.status.youtubeApi = true;
         this.e().initialized(this.status);
     }
 
@@ -79,5 +79,6 @@ const defaultStatus = {
     api: false,
     spotifyApi: false,
     spotify: false,
-    youtube: false
+    youtubeApi: false,
+    youtube: false,
 };

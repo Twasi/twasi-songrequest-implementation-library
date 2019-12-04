@@ -15,7 +15,7 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
         super(events);
         const permaUpdate = async () => {
             await this.positionUpdate();
-            setTimeout(permaUpdate, 500);
+            setTimeout(permaUpdate, 5000);
         };
         permaUpdate().then();
     }

@@ -3,8 +3,9 @@ import {YoutTubePlaybackController} from "./YoutTubePlaybackController";
 import {APIConnectionController} from "../api/APIConnectionController";
 import {Song} from "../../models/Song";
 import {PlaybackProvider} from "../../models/PlaybackProvider";
-import {PlaybackSlaveController} from "./PlaybackSlaveController";
+import {PlaybackSlaveController, PlaybackSlaveEvents} from "./PlaybackSlaveController";
 import {TSRIEvents} from "../../models/Events";
+import {InitializationStatus} from "../../models/InitializationStatus";
 
 export class PlaybackMasterController {
     private song: Song = null;
@@ -15,24 +16,10 @@ export class PlaybackMasterController {
     public readonly spotify: SpotifyPlaybackController;
     public readonly youtube: YoutTubePlaybackController;
 
-    constructor(private api: APIConnectionController, private frontendEvents: TSRIEvents) {
+    constructor(private api: APIConnectionController, private frontendEvents: TSRIEvents, status: InitializationStatus) {
         this.posPredicter = new PositionPredicter(frontendEvents.position);
-        this.spotify = new SpotifyPlaybackController({
-            onPause: () => {
-                if (!this.song) return;
-                if (this.song.provider !== PlaybackProvider.SPOTIFY) return;
-                this.posPredicter.predict = false;
-                this.frontendEvents.stop();
-            }, onPlay: (song?: Song) => {
-                this.posPredicter.predict = true;
-                this.frontendEvents.play();
-            }, onPositionChange: (p1: number, p2: number) => {
-                if (!this.song) return;
-                if (this.song.provider !== PlaybackProvider.SPOTIFY) return;
-                this.posPredicter.setPosition(p1, p2);
-            }, onNext: () => this.next()
-        }, api);
-        this.youtube = new YoutTubePlaybackController(null);
+        this.spotify = new SpotifyPlaybackController(this.playbackProviderEvents(PlaybackProvider.SPOTIFY), api);
+        this.youtube = new YoutTubePlaybackController(this.playbackProviderEvents(PlaybackProvider.YOUTUBE), api, status.youtubeApi);
     }
 
     public play(song?: Song) {
@@ -93,6 +80,26 @@ export class PlaybackMasterController {
             this.queue.shift();
         }
         this.frontendEvents.queueUpdate(this.queue);
+    }
+
+    private playbackProviderEvents(self: PlaybackProvider): PlaybackSlaveEvents {
+        return {
+            onPause: () => {
+                if (!this.song || [PlaybackProvider.NONE, self].includes(this.song.provider)) {
+                    this.posPredicter.predict = false;
+                    this.frontendEvents.stop();
+                }
+            }, onPlay: (song?: Song) => {
+                if (!this.song) return;
+                if (this.song.provider !== self) return;
+                this.posPredicter.predict = true;
+                this.frontendEvents.play();
+            }, onPositionChange: (p1: number, p2: number) => {
+                if (!this.song) return;
+                if (this.song.provider !== self) return;
+                this.posPredicter.setPosition(p1, p2);
+            }, onNext: () => this.next()
+        };
     }
 }
 
