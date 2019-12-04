@@ -21,13 +21,14 @@ export class PlaybackMasterController {
                 if (this.song.provider !== PlaybackProvider.SPOTIFY) return;
                 this.posPredicter.predict = false;
                 this.frontendEvents.stop();
-            }, onPlay: () => {
+            }, onPlay: (song: Song) => {
                 if (this.song.provider !== PlaybackProvider.SPOTIFY) {
                     this.spotify.pause();
                     return;
                 }
                 this.posPredicter.predict = true;
                 this.frontendEvents.play();
+                if (song) this.frontendEvents.song(song);
             }, onPositionChange: (p1: number, p2: number) => {
                 if (this.song.provider !== PlaybackProvider.SPOTIFY) return;
                 this.posPredicter.setPosition(p1, p2);
