@@ -19,4 +19,5 @@ export interface PlaybackSlaveEvents {
     onPlay: (song: Song) => void;
     onPause: () => void;
     onPositionChange: (pos: number, duration: number) => void;
+    onNext: () => void;
 }

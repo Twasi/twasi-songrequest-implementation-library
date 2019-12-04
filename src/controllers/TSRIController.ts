@@ -54,6 +54,8 @@ export class TSRIController {
 }
 
 const defaultEvents: TSRIEvents = {
+    queueUpdate: function (p1: Array<Song>) {
+    },
     enableSpotifyAuth: function (p1: boolean) {
         console.log("Spotify Authentication is now %s.", (p1 ? "enabled" : "disabled"));
     },

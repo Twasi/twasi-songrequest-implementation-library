@@ -8,6 +8,7 @@ import {TSRIEvents} from "../../models/Events";
 
 export class PlaybackMasterController {
     private song: Song = null;
+    private queue: Array<Song> = [];
 
     private posPredicter: PositionPredicter;
 
@@ -21,35 +22,31 @@ export class PlaybackMasterController {
                 if (this.song.provider !== PlaybackProvider.SPOTIFY) return;
                 this.posPredicter.predict = false;
                 this.frontendEvents.stop();
-            }, onPlay: (song: Song) => {
-                if (this.song.provider !== PlaybackProvider.SPOTIFY) {
-                    this.spotify.pause();
-                    return;
-                }
+            }, onPlay: (song?: Song) => {
                 this.posPredicter.predict = true;
                 this.frontendEvents.play();
-                if (song) this.frontendEvents.song(song);
             }, onPositionChange: (p1: number, p2: number) => {
                 if (this.song.provider !== PlaybackProvider.SPOTIFY) return;
                 this.posPredicter.setPosition(p1, p2);
-            }
+            }, onNext: () => this.next()
         }, api);
         this.youtube = new YoutTubePlaybackController(null);
     }
 
     public play(song?: Song) {
-        if(song) {
-            if (this.song) this.getSlaveControllerByProvider(this.song.provider).pause();
+        if (song) {
+            if (this.song) this.getController(this.song.provider).pause();
             this.song = song;
-            this.getSlaveControllerByProvider(song.provider).play(song);
-        } else if(this.song) this.getSlaveControllerByProvider(this.song.provider).resume();
+            this.getController(song.provider).play(song);
+        } else if (this.song) this.getController(this.song.provider).resume();
+        else this.next();
     }
 
     public pause() {
-        if(this.song) this.getSlaveControllerByProvider(this.song.provider).pause();
+        if (this.song) this.getController(this.song.provider).pause();
     }
 
-    private getSlaveControllerByProvider(provider: PlaybackProvider): PlaybackSlaveController {
+    private getController(provider: PlaybackProvider): PlaybackSlaveController {
         switch (provider) {
             case PlaybackProvider.NONE:
             default:
@@ -59,6 +56,46 @@ export class PlaybackMasterController {
             case PlaybackProvider.YOUTUBE:
                 return this.youtube;
         }
+    }
+
+    public seek(position: number) {
+        if (this.song) this.getController(this.song.provider).seek(position);
+    }
+
+    public add(song: Song) {
+        this.queue.push(song);
+        this.frontendEvents.queueUpdate(this.queue);
+        if (!this.posPredicter.predict) this.play();
+    }
+
+    public setQueue(queue: Array<Song>) {
+        if (queue.length) {
+            const song = queue[0];
+            if (!this.song || this.song.uri !== song.uri) this.play(song);
+            else this.frontendEvents.song(song);
+            this.song = song;
+            queue.shift();
+        } else {
+            this.frontendEvents.song(null);
+        }
+        this.queue = queue;
+        this.frontendEvents.queueUpdate(this.queue);
+        if (!this.posPredicter.predict) this.play();
+    }
+
+    public next() {
+        if (this.song) this.getController(this.song.provider).pause();
+        if (!this.queue.length) {
+            this.pause();
+            this.song = null;
+            this.frontendEvents.song(null);
+        } else {
+            const song = this.queue[0];
+            this.queue.shift();
+            this.song = song;
+            this.play(song);
+        }
+        this.frontendEvents.queueUpdate(this.queue);
     }
 }
 

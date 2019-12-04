@@ -16,10 +16,15 @@ const init = (jwt, api) => window.TSRI.init(jwt, api, {
         document.getElementById("slider").value = p1 * 1000;
     }, song: function (p1) {
         console.log("SONG: %s", JSON.stringify(p1))
+        document.getElementById("name").innerText = p1.name;
+        document.getElementById("artist").innerText = (p1.artists && p1.artists.length ? p1.artists[0] : undefined);
+        document.getElementById("platform").innerText = p1.provider === 1 ? 'Spotify' : 'YouTube';
     }, stop: function () {
         console.log("STOP")
     }, volume: function (p1) {
         console.log("Volume Change: %s", p1.toFixed(2))
+    }, queueUpdate: (queue) => {
+        console.log(queue);
     }
 });
 const auth = () => window.TSRI.spotifyAuth.init();

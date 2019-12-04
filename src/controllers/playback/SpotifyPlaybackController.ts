@@ -49,6 +49,7 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
             if (state.paused)
                 this.events.onPause();
             else this.events.onPlay(this.song);
+            if (state.paused && state.disallows.resuming) this.events.onNext();
         });
 
         // Ready
