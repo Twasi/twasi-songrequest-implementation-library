@@ -1,21 +1,27 @@
-import * as ReconnectingWebSocket from '../../../providers/reconnecting-websocket/reconnecting-websocket.min';
-
 export class APIConnectionController {
-    public readonly requests: APIRequestManager;
+    public requests: APIRequestManager;
 
-    private readonly client: WebSocket;
-    private readonly jwt: string;
-    private readonly statusListener: APIConnectionStatusListener;
+    private client: WebSocket;
 
-    constructor(api: string, jwt: string, statusListener: APIConnectionStatusListener) {
-        this.jwt = jwt;
-        this.statusListener = statusListener;
-        this.client = new ReconnectingWebSocket(api, null, {debug: true, reconnectInterval: 500, maxReconnectInterval: 5000, automaticOpen: false}); // TODO disable debug
-        this.requests = new APIRequestManager(this.client);
+    constructor(
+        private api: string,
+        private jwt: string,
+        private statusListener: APIConnectionStatusListener
+    ) {
+        this.connect();
+    }
+
+    private connect() {
+        setTimeout(() => {
+            this.connect();
+        }, 3000);
+        if (this.client && this.client.OPEN) return;
+        this.client = new WebSocket(this.api); // TODO disable debug
         this.client.onopen = () => this.authorize();
-        this.client.onclose = () => this.statusListener.statusChanged(APIConnectionStatus.DISCONNECTED);
-        // @ts-ignore *** ReconnectingWebSocket has an 'open' function that normal WebSocket's don't have ***
-        this.client.open();
+        this.client.onclose = () => {
+            this.statusListener.statusChanged(APIConnectionStatus.DISCONNECTED);
+        };
+        this.requests = new APIRequestManager(this.client);
     }
 
     private async authorize() {

@@ -3,13 +3,14 @@ import {InitializationStatus} from "../models/InitializationStatus";
 import {APIConnectionController} from "./api/APIConnectionController";
 import {Song} from "../models/Song";
 import {SpotifyAuthenticationController} from "./spotify/SpotifyAuthenticationController";
+import {PlaybackMasterController} from "./playback/PlaybackMasterController";
 
 export class TSRIController {
     private events: TSRIEvents = defaultEvents;
     private status: InitializationStatus = defaultStatus;
     private API: APIConnectionController;
     private spotifyAuth: SpotifyAuthenticationController;
-
+    private playback: PlaybackMasterController;
 
     public init(jwt: string, api: string, events: TSRIEvents = null) {
         if(events) this.events = events;
@@ -20,9 +21,13 @@ export class TSRIController {
                 if (this.status.api) await this.spotifyAuth.get();
             }
         });
+        this.playback = new PlaybackMasterController(this.API);
         this.spotifyAuth = new SpotifyAuthenticationController(this.API, {
             statusChanged: this.spotifyStatus,
-            spotifyAuthenticated: (authenticated: boolean) => this.events.enableSpotifyAuth(!authenticated)
+            spotifyAuthenticated: (authenticated: boolean, token?: string) => {
+                this.events.enableSpotifyAuth(!authenticated);
+                if (token) this.playback.spotify.init(token);
+            }
         });
         this.events.initialized(this.status);
     }
