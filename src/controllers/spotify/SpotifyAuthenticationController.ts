@@ -50,6 +50,10 @@ export class SpotifyAuthenticationController {
             this.token = res.token;
             this.expires = new Date(res.expires);
             this.listener.spotifyAuthenticated(true, res.token);
+            setTimeout(async () => {
+                if (this.token !== res.token) return;
+                await this.refresh();
+            }, this.expires.getTime() - Date.now());
         }
     }
 }
