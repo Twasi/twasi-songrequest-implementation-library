@@ -1,15 +1,22 @@
 import {APIConnectionController} from "../api/APIConnectionController";
+import {Song} from "../../models/Song";
+import {PlaybackSlaveController, PlaybackSlaveEvents} from "./PlaybackSlaveController";
 
 declare const Spotify: any;
 
-export class SpotifyPlaybackController {
+export class SpotifyPlaybackController extends PlaybackSlaveController {
     private player: any;
+    private song: Song;
+    private id: string;
+    private token: string;
 
-    constructor(private api: APIConnectionController) {
+    constructor(protected events: PlaybackSlaveEvents, private api: APIConnectionController) {
+        super(events);
     }
 
     public init(token: string) {
         if (this.player) this.player.disconnect();
+        this.token = token;
         const player = new Spotify.Player({
             name: 'Twasi-Panel',
             getOAuthToken: (cb: (token: string) => void) => {
@@ -31,13 +38,17 @@ export class SpotifyPlaybackController {
         });
 
         // Playback status updates
-        player.addListener('player_state_changed', (state: string) => {
-            console.log(state);
+        player.addListener('player_state_changed', (state: any) => {
+            if (state.position && state.duration)
+                this.events.onPositionChange(state.position, state.duration);
+            if (state.paused)
+                this.events.onPause();
+            else this.events.onPlay(this.song);
         });
 
         // Ready
         player.addListener('ready', ({device_id}: { device_id: string }) => {
-            console.log('Ready with Device ID', device_id);
+            this.id = device_id;
         });
 
         // Not Ready
@@ -47,4 +58,33 @@ export class SpotifyPlaybackController {
         this.player = player;
         player.connect();
     }
+
+    pause(): void {
+        this.player.pause();
+    }
+
+    async play(song: Song): Promise<void> {
+        if (this.song && this.song.uri === song.uri) {
+            this.player.resume();
+            return;
+        }
+        this.song = song;
+        await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({uris: [song.uri]}),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.token}`
+            },
+        });
+    }
+
+    seek(position: number): void {
+        this.player.seek(this.song.duration * position);
+    }
+
+    setVolume(volume: number): void {
+        this.player.setVolume(volume);
+    }
 }
+

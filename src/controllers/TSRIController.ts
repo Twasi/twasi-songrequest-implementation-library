@@ -21,7 +21,7 @@ export class TSRIController {
                 if (this.status.api) await this.spotifyAuth.get();
             }
         });
-        this.playback = new PlaybackMasterController(this.API);
+        this.playback = new PlaybackMasterController(this.API, this.events);
         this.spotifyAuth = new SpotifyAuthenticationController(this.API, {
             statusChanged: this.spotifyStatus,
             spotifyAuthenticated: (authenticated: boolean, token?: string) => {
