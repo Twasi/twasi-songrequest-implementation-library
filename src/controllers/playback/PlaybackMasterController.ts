@@ -19,6 +19,7 @@ export class PlaybackMasterController {
         this.posPredicter = new PositionPredicter(frontendEvents.position);
         this.spotify = new SpotifyPlaybackController({
             onPause: () => {
+                if (!this.song) return;
                 if (this.song.provider !== PlaybackProvider.SPOTIFY) return;
                 this.posPredicter.predict = false;
                 this.frontendEvents.stop();
@@ -26,6 +27,7 @@ export class PlaybackMasterController {
                 this.posPredicter.predict = true;
                 this.frontendEvents.play();
             }, onPositionChange: (p1: number, p2: number) => {
+                if (!this.song) return;
                 if (this.song.provider !== PlaybackProvider.SPOTIFY) return;
                 this.posPredicter.setPosition(p1, p2);
             }, onNext: () => this.next()
@@ -35,11 +37,12 @@ export class PlaybackMasterController {
 
     public play(song?: Song) {
         if (song) {
-            if (this.song) this.getController(this.song.provider).pause();
+            if (this.song) this.pause();
             this.song = song;
             this.getController(song.provider).play(song);
         } else if (this.song) this.getController(this.song.provider).resume();
         else this.next();
+        this.frontendEvents.song(this.song);
     }
 
     public pause() {
@@ -74,26 +77,21 @@ export class PlaybackMasterController {
             if (!this.song || this.song.uri !== song.uri) this.play(song);
             else this.frontendEvents.song(song);
             this.song = song;
-            queue.shift();
         } else {
             this.frontendEvents.song(null);
         }
         this.queue = queue;
         this.frontendEvents.queueUpdate(this.queue);
-        if (!this.posPredicter.predict) this.play();
     }
 
     public next() {
-        if (this.song) this.getController(this.song.provider).pause();
+        if (this.song) this.pause();
         if (!this.queue.length) {
-            this.pause();
             this.song = null;
             this.frontendEvents.song(null);
         } else {
-            const song = this.queue[0];
+            this.play(this.queue[0]);
             this.queue.shift();
-            this.song = song;
-            this.play(song);
         }
         this.frontendEvents.queueUpdate(this.queue);
     }

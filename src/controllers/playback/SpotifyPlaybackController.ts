@@ -1,6 +1,7 @@
 import {APIConnectionController} from "../api/APIConnectionController";
 import {Song} from "../../models/Song";
 import {PlaybackSlaveController, PlaybackSlaveEvents} from "./PlaybackSlaveController";
+import {TSRIWindow} from "../../models/TSRIWindow";
 
 declare const Spotify: any;
 
@@ -30,16 +31,20 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
         });
         // Error handling
         player.addListener('initialization_error', ({message}: { message: string }) => {
-            console.error(message);
+            player.disconnect();
         });
-        player.addListener('authentication_error', ({message}: { message: string }) => {
-            console.error(message);
+        player.addListener('authentication_error', async ({message}: { message: string }) => {
+            player.disconnect();
+            // @ts-ignore
+            await (window as TSRIWindow).TSRI.spotifyAuth.init();
         });
-        player.addListener('account_error', ({message}: { message: string }) => {
-            console.error(message);
+        player.addListener('account_error', async ({message}: { message: string }) => {
+            // @ts-ignore
+            await (window as TSRIWindow).TSRI.spotifyAuth.refresh();
         });
-        player.addListener('playback_error', ({message}: { message: string }) => {
-            console.error(message);
+        player.addListener('playback_error', async ({message}: { message: string }) => {
+            // @ts-ignore
+            await (window as TSRIWindow).TSRI.spotifyAuth.refresh();
         });
 
         // Playback status updates
@@ -49,7 +54,11 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
             if (state.paused)
                 this.events.onPause();
             else this.events.onPlay(this.song);
-            if (state.paused && state.disallows.resuming) this.events.onNext();
+            if (
+                state.paused && state.disallows.resuming
+                && state.position && state.duration
+                && (state.position / state.duration > 0.98)
+            ) this.events.onNext();
         });
 
         // Ready
@@ -58,8 +67,9 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
         });
 
         // Not Ready
-        player.addListener('not_ready', ({device_id}: { device_id: string }) => {
-            console.log('Device ID has gone offline', device_id);
+        player.addListener('not_ready', async ({device_id}: { device_id: string }) => {
+            // @ts-ignore
+            await (window as TSRIWindow).TSRI.spotifyAuth.refresh();
         });
         this.player = player;
         player.connect();

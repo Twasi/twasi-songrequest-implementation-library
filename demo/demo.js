@@ -15,7 +15,8 @@ const init = (jwt, api) => window.TSRI.init(jwt, api, {
         console.log("Progress: %s", p1.toFixed(4));
         document.getElementById("slider").value = p1 * 1000;
     }, song: function (p1) {
-        console.log("SONG: %s", JSON.stringify(p1))
+        console.log("SONG: %s", JSON.stringify(p1));
+        if (!p1) return;
         document.getElementById("name").innerText = p1.name;
         document.getElementById("artist").innerText = (p1.artists && p1.artists.length ? p1.artists[0] : undefined);
         document.getElementById("platform").innerText = p1.provider === 1 ? 'Spotify' : 'YouTube';
