@@ -49,6 +49,7 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
 
         // Playback status updates
         player.addListener('player_state_changed', async (state: any) => {
+            if (!state) return;
             if (state.position && state.duration)
                 this.events.onPositionChange(state.position, state.duration);
             if (state.paused)

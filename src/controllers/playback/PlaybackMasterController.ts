@@ -75,8 +75,7 @@ export class PlaybackMasterController {
         if (queue.length) {
             const song = queue[0];
             if (!this.song || this.song.uri !== song.uri) this.play(song);
-            else this.frontendEvents.song(song);
-            this.song = song;
+            else if (this.song.uri === song.uri) queue.shift();
         } else {
             this.frontendEvents.song(null);
         }
