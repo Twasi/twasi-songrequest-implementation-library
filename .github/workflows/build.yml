@@ -29,7 +29,8 @@ jobs:
         cd ../panel
         git config --local user.email "info@twasi.net"
         git config --local user.name "Twasi"
-        git commit -m "Update TSRI lib" -a
+        git add -A
+        git commit -m "Update TSRI lib"
       env:
         CI: true
     - name: Push to twasi-panel
