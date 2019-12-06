@@ -6,10 +6,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [8.x, 10.x, 12.x]
-
     steps:
     - uses: actions/checkout@v1
     - name: Check out twasi-panel
@@ -18,13 +14,12 @@ jobs:
         repository: 'twasi/twasi-panel'
         path: 'panel'
         ref: 'master'
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js 12.x
       uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '12.x'
     - name: npm install, build & commit
       run: |
-        npm ci
         npm install
         npm run build
         cp dist/bundle.js panel/public/tsri-bundle.js
@@ -35,7 +30,7 @@ jobs:
       env:
         CI: true
     - name: Push to twasi-panel
-      uses: ludeeus/action-push@0.0.1
+      uses: ad-m/github-push-action@v0.5.0
       with:
         repository: 'twasi/twasi-panel'
         github_token: ${{ secrets.GITHUB_TOKEN }}
