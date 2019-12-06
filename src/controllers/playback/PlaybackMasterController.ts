@@ -71,10 +71,12 @@ export class PlaybackMasterController {
     }
 
     public next() {
+        this.posPredicter.resetPosition();
         if (this.song) this.pause();
         if (!this.queue.length) {
             this.song = null;
             this.frontendEvents.song(null);
+            this.posPredicter.resetPosition();
         } else {
             this.play(this.queue[0]);
             this.queue.shift();
@@ -110,12 +112,9 @@ class PositionPredicter {
     private position: number = 0;
     public prediction: number = 0;
 
-    constructor(callback: (position: number) => void) {
+    constructor(private callback: (position: number) => void) {
         const predict = () => {
-            let prediction;
-            if (this.predict) prediction = (this.position + (Date.now() - this.lastPosition)) / this.duration;
-            if(typeof prediction === "number") this.prediction = prediction > 1 ? 1 : prediction;
-            callback(this.prediction);
+            this.predictNow();
             setTimeout(predict, 500);
         };
         predict();
@@ -125,5 +124,21 @@ class PositionPredicter {
         this.lastPosition = Date.now();
         this.position = position;
         this.duration = duration;
+        this.predictNow();
+    }
+
+    public resetPosition() {
+        this.setPosition(0, 0);
+    }
+
+    private predictNow() {
+        let prediction;
+        if(this.duration === 0 && this.position === 0) {
+            this.callback(0);
+            return;
+        }
+        if (this.predict) prediction = (this.position + (Date.now() - this.lastPosition)) / this.duration;
+        if (typeof prediction === "number") this.prediction = prediction > 1 ? 1 : prediction;
+        this.callback(this.prediction);
     }
 }

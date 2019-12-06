@@ -47,7 +47,7 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
             if (!state) return;
             if (state.position && state.duration)
                 this.events.onPositionChange(state.position, state.duration);
-            else if(!state.paused)
+            else if (!state.paused)
                 this.events.onPositionChange(0, this.song.duration);
             if (state.paused)
                 this.events.onPause();
@@ -104,5 +104,5 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
     resume(): void {
         this.player.resume();
     }
-}
 
+}

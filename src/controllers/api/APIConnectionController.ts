@@ -1,3 +1,8 @@
+import {Song} from "../../models/Song";
+import {Add} from "./requests/songrequests/AddRequest";
+import {GetQueue} from "./requests/songrequests/GetQueue";
+import {Next} from "./requests/songrequests/NextRequest";
+
 export class APIConnectionController {
     public requests: APIRequestManager;
 
@@ -42,6 +47,18 @@ export class APIConnectionController {
             })
         }
         this.statusListener.statusChanged(response.status === 'success' ? APIConnectionStatus.CONNECTED : APIConnectionStatus.UNAUTHORIZED);
+    }
+
+    public async add(song: Song) {
+        return await this.requests.request(Add(song));
+    }
+
+    public async getQueue() {
+        return (await this.requests.request(GetQueue)).result;
+    }
+
+    public async next(skip: boolean = false) {
+        return await this.requests.request(Next(skip));
     }
 }
 
