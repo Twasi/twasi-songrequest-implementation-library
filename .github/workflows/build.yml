@@ -31,6 +31,7 @@ jobs:
         git config --local user.name "Twasi"
         git add -A
         git commit -m "Update TSRI lib"
+        git push "https://${{ secrets.GH_ACCOUNT }}:${{ secrets.GH_TOKEN }}@github.com/Twasi/twasi-panel.git"
       env:
         CI: true
     - name: Push to twasi-panel
