@@ -9,15 +9,10 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
     private player: any;
     private song: Song;
     private id: string;
-    private token: string;
+    token: string;
 
     constructor(protected events: PlaybackSlaveEvents, private api: APIConnectionController) {
         super(events);
-        const permaUpdate = async () => {
-            await this.positionUpdate();
-            setTimeout(permaUpdate, 5000);
-        };
-        permaUpdate().then();
     }
 
     public init(token: string) {
@@ -52,6 +47,8 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
             if (!state) return;
             if (state.position && state.duration)
                 this.events.onPositionChange(state.position, state.duration);
+            else if(!state.paused)
+                this.events.onPositionChange(0, this.song.duration);
             if (state.paused)
                 this.events.onPause();
             else this.events.onPlay(this.song);
@@ -83,17 +80,17 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
     async play(song: Song): Promise<void> {
         if (this.song && this.song.uri === song.uri) {
             this.player.resume();
-            return;
+        } else {
+            this.song = song;
+            await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.id}`, {
+                method: 'PUT',
+                body: JSON.stringify({uris: [song.uri]}),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+            });
         }
-        this.song = song;
-        await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.id}`, {
-            method: 'PUT',
-            body: JSON.stringify({uris: [song.uri]}),
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.token}`
-            },
-        });
     }
 
     seek(position: number): void {
@@ -106,14 +103,6 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
 
     resume(): void {
         this.player.resume();
-    }
-
-    private async positionUpdate() {
-        try {
-            let state = await this.player.getCurrentState();
-            if (state) this.events.onPositionChange(state.position, state.duration);
-        } catch (e) {
-        }
     }
 }
 

@@ -4,6 +4,7 @@ import {APIConnectionController} from "./api/APIConnectionController";
 import {Song} from "../models/Song";
 import {SpotifyAuthenticationController} from "./spotify/SpotifyAuthenticationController";
 import {PlaybackMasterController} from "./playback/PlaybackMasterController";
+import {SearchController} from "./api/SearchController";
 
 export class TSRIController {
     private status: InitializationStatus = defaultStatus;
@@ -11,6 +12,7 @@ export class TSRIController {
     private spotifyAuth: SpotifyAuthenticationController;
     private playback: PlaybackMasterController;
     private events: TSRIEvents;
+    private search: SearchController;
 
     public init(jwt: string, api: string, events: TSRIEvents) {
         this.events = events;
@@ -22,6 +24,7 @@ export class TSRIController {
             }
         });
         this.playback = new PlaybackMasterController(this.API, events, this.status);
+        this.search = new SearchController(this.API, this.playback.spotify);
         this.spotifyAuth = new SpotifyAuthenticationController(this.API, {
             statusChanged: this.spotifyStatus,
             spotifyAuthenticated: (authenticated: boolean, token?: string) => {
