@@ -12,7 +12,7 @@ const init = (jwt, api) => window.TSRI.init(jwt, api, {
     }, play: function () {
         console.log("PLAY")
     }, position: function (p1) {
-        console.log("Progress: %s", p1.toFixed(4));
+        // console.log("Progress: %s", p1.toFixed(4));
         document.getElementById("slider").value = p1 * 1000;
     }, song: function (p1) {
         console.log("SONG: %s", JSON.stringify(p1));

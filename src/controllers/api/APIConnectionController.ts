@@ -15,8 +15,11 @@ export class APIConnectionController {
         setTimeout(() => {
             this.connect();
         }, 3000);
-        if (this.client && this.client.OPEN) return;
-        this.client = new WebSocket(this.api); // TODO disable debug
+        if (this.client && this.client.readyState === this.client.OPEN) return;
+        this.client = new WebSocket(this.api);
+        this.client.onerror = () => {
+            this.statusListener.statusChanged(APIConnectionStatus.DISCONNECTED);
+        };
         this.client.onopen = () => this.authorize();
         this.client.onclose = () => {
             this.statusListener.statusChanged(APIConnectionStatus.DISCONNECTED);
@@ -25,7 +28,19 @@ export class APIConnectionController {
     }
 
     private async authorize() {
-        const response = await this.requests.request({topic: 'auth', scope: "action", action: {type: 'JWT_TOKEN', token: this.jwt}});
+        let response = await this.requests.request({
+            topic: 'auth',
+            scope: "action",
+            action: {type: 'JWT_TOKEN', token: this.jwt}
+        });
+        if (response.status === 'success') {
+            let channel = response.result.user.twitchId;
+            response = await this.requests.request({
+                topic: 'twasi-songrequests/events',
+                scope: "subscribe",
+                config: {channel}
+            })
+        }
         this.statusListener.statusChanged(response.status === 'success' ? APIConnectionStatus.CONNECTED : APIConnectionStatus.UNAUTHORIZED);
     }
 }
