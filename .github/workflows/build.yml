@@ -1,0 +1,42 @@
+name: Build & Deploy to Twasi-Panel
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [8.x, 10.x, 12.x]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Check out twasi-panel
+      uses: actions/checkout@v2-beta
+      with:
+        repository: 'twasi/twasi-panel'
+        path: 'panel'
+        ref: 'master'
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: npm install, build & commit
+      run: |
+        npm ci
+        npm install
+        npm run build
+        cp dist/bundle.js panel/public/tsri-bundle.js
+        cd panel
+        git config --local user.email "info@twasi.net"
+        git config --local user.name "Twasi"
+        git commit -m "Update TSRI lib" -a
+      env:
+        CI: true
+    - name: Push to twasi-panel
+      uses: ludeeus/action-push@0.0.1
+      with:
+        repository: 'twasi/twasi-panel'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        directory: 'panel'
