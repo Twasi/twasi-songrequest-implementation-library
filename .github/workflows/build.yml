@@ -7,7 +7,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2-beta
+      with:
+        path: 'lib'
     - name: Check out twasi-panel
       uses: actions/checkout@v2-beta
       with:
@@ -20,10 +22,11 @@ jobs:
         node-version: '12.x'
     - name: npm install, build & commit
       run: |
+        cd lib
         npm install
         npm run build
-        cp dist/bundle.js panel/public/tsri-bundle.js
-        cd panel
+        cp dist/bundle.js ../panel/public/tsri-bundle.js
+        cd ../panel
         git config --local user.email "info@twasi.net"
         git config --local user.name "Twasi"
         git commit -m "Update TSRI lib" -a
