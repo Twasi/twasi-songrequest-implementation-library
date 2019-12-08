@@ -26,18 +26,26 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
         });
         // Error handling
         player.addListener('initialization_error', ({message}: { message: string }) => {
+            console.log(message);
+            return;
             player.disconnect();
         });
         player.addListener('authentication_error', async ({message}: { message: string }) => {
+            console.log(message);
+            return;
             player.disconnect();
             // @ts-ignore
             await (window as TSRIWindow).TSRI.spotifyAuth.init();
         });
         player.addListener('account_error', async ({message}: { message: string }) => {
+            console.log(message);
+            return;
             // @ts-ignore
             await (window as TSRIWindow).TSRI.spotifyAuth.refresh();
         });
         player.addListener('playback_error', async ({message}: { message: string }) => {
+            console.log(message);
+            return;
             // @ts-ignore
             await (window as TSRIWindow).TSRI.spotifyAuth.refresh();
         });

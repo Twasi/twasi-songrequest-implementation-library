@@ -1,6 +1,6 @@
 import {IAPIRequest} from "../../APIConnectionController";
 
-export const GetQueue: IAPIRequest = {
+export const GetQueueRequest: IAPIRequest = {
     topic: "twasi-songrequests/events",
     scope: "action",
     action: {

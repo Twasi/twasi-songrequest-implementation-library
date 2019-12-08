@@ -3,6 +3,7 @@ import {GetRequest} from "../api/requests/spotify-credentials/GetRequest";
 import {InitRequest} from "../api/requests/spotify-credentials/InitRequest";
 import {SetRequest} from "../api/requests/spotify-credentials/SetRequest";
 import {RefreshRequest} from "../api/requests/spotify-credentials/RefreshRequest";
+import {RemoveRequest} from "../api/requests/spotify-credentials/RemoveRequest";
 
 export class SpotifyAuthenticationController {
     private readonly api: APIConnectionController;
@@ -42,6 +43,11 @@ export class SpotifyAuthenticationController {
     public async refresh() {
         const res = await this.api.requests.request(RefreshRequest);
         this.handle(res.token ? res : null);
+    }
+
+    public async remove() {
+        if ((await this.api.requests.request(RemoveRequest)).status !== 'success')
+            throw("An error occured");
     }
 
     private handle(res: { token: string, expires: number } | null) {

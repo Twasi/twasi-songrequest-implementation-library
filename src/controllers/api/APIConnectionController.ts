@@ -1,7 +1,7 @@
 import {Song} from "../../models/Song";
-import {Add} from "./requests/songrequests/AddRequest";
-import {GetQueue} from "./requests/songrequests/GetQueue";
-import {Next} from "./requests/songrequests/NextRequest";
+import {AddRequest} from "./requests/songrequests/AddRequest";
+import {GetQueueRequest} from "./requests/songrequests/GetQueueRequest";
+import {NextRequest} from "./requests/songrequests/NextRequest";
 
 export class APIConnectionController {
     public requests: APIRequestManager;
@@ -50,15 +50,15 @@ export class APIConnectionController {
     }
 
     public async add(song: Song) {
-        return await this.requests.request(Add(song));
+        return await this.requests.request(AddRequest(song));
     }
 
     public async getQueue() {
-        return (await this.requests.request(GetQueue)).result;
+        return (await this.requests.request(GetQueueRequest)).result;
     }
 
     public async next(skip: boolean = false) {
-        return await this.requests.request(Next(skip));
+        return await this.requests.request(NextRequest(skip));
     }
 }
 
@@ -81,15 +81,20 @@ export interface IAPIRequest {
 export class APIRequestManager {
     private count: number = 0;
     private pending: Map<string, (res?: any) => void> = new Map();
+    private events: Map<string, Array<(details: any, timeStamp: Date) => void>> = new Map();
     private client: WebSocket;
 
     constructor(client: WebSocket) {
         this.client = client;
         this.client.onmessage = (msg) => {
             const ob = JSON.parse(msg.data) as any;
-            if (this.pending.has(ob.ref)) {
+            if (ob.ref && this.pending.has(ob.ref)) {
                 this.pending.get(ob.ref)(ob.result);
                 this.pending.delete(ob.ref);
+            } else if (ob.event && this.events.has(ob.event)) {
+                this.events.get(ob.event).forEach(handler => {
+                    handler(ob.details, new Date(ob.timeStamp))
+                });
             }
         }
     }
@@ -105,6 +110,11 @@ export class APIRequestManager {
                 rej("Timed Out");
             }, timeout);
         })
+    }
+
+    public on(event: string, handler: (details: any, timeStamp: Date) => void) {
+        if (!this.events.has(event)) this.events.set(event, [handler]);
+        else this.events.get(event).push(handler);
     }
 
     private newRef(): string {

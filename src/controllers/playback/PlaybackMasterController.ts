@@ -6,6 +6,8 @@ import {PlaybackProvider} from "../../models/PlaybackProvider";
 import {PlaybackSlaveController, PlaybackSlaveEvents} from "./PlaybackSlaveController";
 import {TSRIEvents} from "../../models/Events";
 import {InitializationStatus} from "../../models/InitializationStatus";
+import {BackRequest} from "../api/requests/songrequests/BackRequest";
+import {NextRequest} from "../api/requests/songrequests/NextRequest";
 
 export class PlaybackMasterController {
     private song: Song = null;
@@ -22,13 +24,13 @@ export class PlaybackMasterController {
         this.youtube = new YoutTubePlaybackController(this.playbackProviderEvents(PlaybackProvider.YOUTUBE), api, status.youtubeApi);
     }
 
-    public play(song?: Song) {
+    public async play(song?: Song) {
         if (song) {
             if (this.song) this.pause();
             this.song = song;
             this.getController(song.provider).play(song);
         } else if (this.song) this.getController(this.song.provider).resume();
-        else this.next();
+        else await this.apiNext();
         this.frontendEvents.song(this.song);
     }
 
@@ -84,6 +86,20 @@ export class PlaybackMasterController {
         this.frontendEvents.queueUpdate(this.queue);
     }
 
+    public async back() {
+        let result = await this.api.requests.request(BackRequest);
+        if (result.status !== 'success')
+            throw (result.message);
+    }
+
+    public async apiNext() {
+        await this.api.requests.request(NextRequest(false));
+    }
+
+    public async skip() {
+        await this.api.requests.request(NextRequest(true));
+    }
+
     private playbackProviderEvents(self: PlaybackProvider): PlaybackSlaveEvents {
         return {
             onPause: () => {
@@ -100,7 +116,7 @@ export class PlaybackMasterController {
                 if (!this.song) return;
                 if (this.song.provider !== self) return;
                 this.posPredicter.setPosition(p1, p2);
-            }, onNext: () => this.next()
+            }, onNext: () => this.apiNext()
         };
     }
 }
