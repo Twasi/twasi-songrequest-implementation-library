@@ -5,6 +5,7 @@ import {NextRequest} from "./requests/songrequests/NextRequest";
 
 export class APIConnectionController {
     public requests: APIRequestManager;
+    private events: Map<string, Array<(details: any, timeStamp: Date) => void>> = new Map();
 
     private client: WebSocket;
 
@@ -29,7 +30,7 @@ export class APIConnectionController {
         this.client.onclose = () => {
             this.statusListener.statusChanged(APIConnectionStatus.DISCONNECTED);
         };
-        this.requests = new APIRequestManager(this.client);
+        this.requests = new APIRequestManager(this.client, this.events);
     }
 
     private async authorize() {
@@ -47,6 +48,11 @@ export class APIConnectionController {
             })
         }
         this.statusListener.statusChanged(response.status === 'success' ? APIConnectionStatus.CONNECTED : APIConnectionStatus.UNAUTHORIZED);
+    }
+
+    public on(event: string, handler: (details: any, timeStamp: Date) => void) {
+        if (!this.events.has(event)) this.events.set(event, [handler]);
+        else this.events.get(event).push(handler);
     }
 
     public async add(song: Song) {
@@ -84,7 +90,8 @@ export class APIRequestManager {
     private events: Map<string, Array<(details: any, timeStamp: Date) => void>> = new Map();
     private client: WebSocket;
 
-    constructor(client: WebSocket) {
+    constructor(client: WebSocket, events?: Map<string, Array<(details: any, timeStamp: Date) => void>>) {
+        if (events) this.events = events;
         this.client = client;
         this.client.onmessage = (msg) => {
             const ob = JSON.parse(msg.data) as any;

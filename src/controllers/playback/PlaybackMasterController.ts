@@ -8,33 +8,47 @@ import {TSRIEvents} from "../../models/Events";
 import {InitializationStatus} from "../../models/InitializationStatus";
 import {BackRequest} from "../api/requests/songrequests/BackRequest";
 import {NextRequest} from "../api/requests/songrequests/NextRequest";
+import {GetQueueRequest} from "../api/requests/songrequests/GetQueueRequest";
+import {AddRequest} from "../api/requests/songrequests/AddRequest";
 
 export class PlaybackMasterController {
     private song: Song = null;
     private queue: Array<Song> = [];
+    private firstPlayback: boolean = true;
 
     private posPredicter: PositionPredicter;
 
     public readonly spotify: SpotifyPlaybackController;
     public readonly youtube: YoutTubePlaybackController;
+    private shouldPlay: boolean = false;
 
     constructor(private api: APIConnectionController, private frontendEvents: TSRIEvents, status: InitializationStatus) {
         this.posPredicter = new PositionPredicter(frontendEvents.position);
         this.spotify = new SpotifyPlaybackController(this.playbackProviderEvents(PlaybackProvider.SPOTIFY), api);
         this.youtube = new YoutTubePlaybackController(this.playbackProviderEvents(PlaybackProvider.YOUTUBE), api, status.youtubeApi);
+        api.on("queue", (queue) => this.setQueue(queue, this.shouldPlay));
     }
 
     public async play(song?: Song) {
+        this.shouldPlay = true;
         if (song) {
             if (this.song) this.pause();
             this.song = song;
             this.getController(song.provider).play(song);
-        } else if (this.song) this.getController(this.song.provider).resume();
-        else await this.apiNext();
+        } else if (this.song) {
+            if (!this.firstPlayback && this.posPredicter.prediction !== 0)
+                this.getController(this.song.provider).resume();
+            else {
+                this.firstPlayback = false;
+                this.play(this.song);
+            }
+        }
+        else await this.next();
         this.frontendEvents.song(this.song);
     }
 
     public pause() {
+        this.shouldPlay = false;
         if (this.song) this.getController(this.song.provider).pause();
     }
 
@@ -60,19 +74,28 @@ export class PlaybackMasterController {
         if (!this.posPredicter.predict) this.play();
     }
 
-    public setQueue(queue: Array<Song>) {
+    public setQueue(queue: Array<Song>, play: boolean = true) {
         if (queue.length) {
             const song = queue[0];
-            if (!this.song || this.song.uri !== song.uri) this.play(song);
-            else if (this.song.uri === song.uri) queue.shift();
+            if (play && !this.song || (this.song && this.song.uri !== song.uri)) this.play(song);
+            else if (this.song && this.song.uri === song.uri) queue.shift();
+            else {
+                this.frontendEvents.song(queue[0]);
+                this.song = song;
+            }
         } else {
+            this.posPredicter.resetPosition();
+            if (this.song) this.pause();
+            this.song = null;
             this.frontendEvents.song(null);
+            this.posPredicter.resetPosition();
         }
         this.queue = queue;
         this.frontendEvents.queueUpdate(this.queue);
     }
 
-    public next() {
+    public localNext() {
+
         this.posPredicter.resetPosition();
         if (this.song) this.pause();
         if (!this.queue.length) {
@@ -92,12 +115,16 @@ export class PlaybackMasterController {
             throw (result.message);
     }
 
-    public async apiNext() {
+    public async next() {
         await this.api.requests.request(NextRequest(false));
     }
 
     public async skip() {
         await this.api.requests.request(NextRequest(true));
+    }
+
+    public async apiAdd(song: Song) {
+        await this.api.requests.request(AddRequest(song));
     }
 
     private playbackProviderEvents(self: PlaybackProvider): PlaybackSlaveEvents {
@@ -116,8 +143,12 @@ export class PlaybackMasterController {
                 if (!this.song) return;
                 if (this.song.provider !== self) return;
                 this.posPredicter.setPosition(p1, p2);
-            }, onNext: () => this.apiNext()
+            }, onNext: () => this.next()
         };
+    }
+
+    public async loadQueue(play: boolean = true) {
+        this.setQueue((await this.api.requests.request(GetQueueRequest)).result, play);
     }
 }
 

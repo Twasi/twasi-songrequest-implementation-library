@@ -26,28 +26,16 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
         });
         // Error handling
         player.addListener('initialization_error', ({message}: { message: string }) => {
-            console.log(message);
-            return;
-            player.disconnect();
+            (window as TSRIWindow).TSRI.reports.spotifyReports.push({type: 'initialization_error', message});
         });
         player.addListener('authentication_error', async ({message}: { message: string }) => {
-            console.log(message);
-            return;
-            player.disconnect();
-            // @ts-ignore
-            await (window as TSRIWindow).TSRI.spotifyAuth.init();
+            (window as TSRIWindow).TSRI.reports.spotifyReports.push({type: 'authentication_error', message});
         });
         player.addListener('account_error', async ({message}: { message: string }) => {
-            console.log(message);
-            return;
-            // @ts-ignore
-            await (window as TSRIWindow).TSRI.spotifyAuth.refresh();
+            (window as TSRIWindow).TSRI.reports.spotifyReports.push({type: 'account_error', message});
         });
         player.addListener('playback_error', async ({message}: { message: string }) => {
-            console.log(message);
-            return;
-            // @ts-ignore
-            await (window as TSRIWindow).TSRI.spotifyAuth.refresh();
+            (window as TSRIWindow).TSRI.reports.spotifyReports.push({type: 'playback_error', message});
         });
 
         // Playback status updates

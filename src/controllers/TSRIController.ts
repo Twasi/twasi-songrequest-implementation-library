@@ -1,10 +1,11 @@
 import {TSRIEvents} from "../models/Events";
 import {InitializationStatus} from "../models/InitializationStatus";
-import {APIConnectionController} from "./api/APIConnectionController";
+import {APIConnectionController, APIConnectionStatus} from "./api/APIConnectionController";
 import {Song} from "../models/Song";
 import {SpotifyAuthenticationController} from "./spotify/SpotifyAuthenticationController";
 import {PlaybackMasterController} from "./playback/PlaybackMasterController";
 import {SearchController} from "./api/SearchController";
+import {ReportRequest} from "./api/requests/other/ReportRequest";
 
 export class TSRIController {
     private status: InitializationStatus = defaultStatus;
@@ -13,6 +14,7 @@ export class TSRIController {
     private playback: PlaybackMasterController;
     private events: TSRIEvents;
     private search: SearchController;
+    public reports: any = {spotifyReports: []};
 
     public init(jwt: string, api: string, events: TSRIEvents) {
         this.events = events;
@@ -21,6 +23,9 @@ export class TSRIController {
                 this.status.api = status === 0;
                 this.e().initialized(this.status);
                 if (this.status.api) await this.spotifyAuth.get();
+                if (status === APIConnectionStatus.CONNECTED) {
+                    this.loadQueue(false);
+                }
             }
         });
         this.playback = new PlaybackMasterController(this.API, events, this.status);
@@ -53,6 +58,15 @@ export class TSRIController {
     private e() {
         if (this.events) return this.events;
         return defaultEvents;
+    }
+
+    private async loadQueue(play: boolean = true) {
+        await this.playback.loadQueue(play);
+    }
+
+    public async report(reason: string) {
+        this.reports.reason = reason;
+        await this.API.requests.request(ReportRequest(this.reports));
     }
 }
 
