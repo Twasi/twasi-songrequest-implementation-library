@@ -8,7 +8,8 @@ export interface Song {
     name: string,
     artists: Array<string>,
     covers?: Array<string>,
-    duration: number
+    duration: number,
+    playInformation?: PlayInformation
 }
 
 export interface Requester {
@@ -16,4 +17,9 @@ export interface Requester {
     userName: string;
     twitchId: string;
     avatar: string;
+}
+
+export interface PlayInformation {
+    played: number;
+    skipped: number;
 }

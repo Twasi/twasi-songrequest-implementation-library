@@ -10,5 +10,5 @@ export interface TSRIEvents {
     position: (newPosition: number) => void,
     song: (song: Song) => void,
     enableSpotifyAuth: (enable: boolean) => void
-    queueUpdate: (queue: Array<Song>) => void;
+    queueUpdate: (queue: Array<Song>, history: Array<Song>) => void;
 }
