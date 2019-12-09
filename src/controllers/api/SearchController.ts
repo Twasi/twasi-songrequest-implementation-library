@@ -16,7 +16,7 @@ export class SearchController {
     }
 
     public async onYouTube(query: string): Promise<Array<Song>> {
-        const response = await this.api.requests.request(YouTubeSearch(query));
+        const response = await this.api.requests.request(YouTubeSearch(query), 6000);
         if (response.status === 'success') return response.result;
         throw("An error occurred.");
     }
