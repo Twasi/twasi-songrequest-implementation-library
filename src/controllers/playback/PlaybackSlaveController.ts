@@ -3,7 +3,7 @@ import {Song} from "../../models/Song";
 export abstract class PlaybackSlaveController {
     public abstract pause(): void;
 
-    public abstract play(song: Song): void;
+    public abstract play(song: Song, forceBegin: boolean): void;
 
     public abstract seek(position: number): void;
 

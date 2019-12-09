@@ -51,7 +51,7 @@ export class PlaybackMasterController {
         if (song) {
             if (this.song) this.pause();
             this.song = song;
-            this.getController(song.provider).play(song);
+            this.getController(song.provider).play(song, forceBegin);
         } else if (this.song) {
             if (!this.firstPlayback && this.posPredicter.prediction !== 0)
                 this.getController(this.song.provider).resume();
@@ -61,10 +61,11 @@ export class PlaybackMasterController {
             }
         } else await this.next();
         this.frontendEvents.song(this.song);
+        this.shouldPlay = true;
     }
 
     public pause() {
-        this.shouldPlay = false;
+        this.shouldPlay = true;
         if (this.song) this.getController(this.song.provider).pause();
     }
 

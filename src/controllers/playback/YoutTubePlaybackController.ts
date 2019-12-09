@@ -40,7 +40,7 @@ export class YoutTubePlaybackController extends PlaybackSlaveController {
         this.player.pauseVideo();
     }
 
-    play(song: Song): void {
+    play(song: Song, forceBegin: boolean): void {
         this.player.loadVideoById(song.uri);
     }
 

@@ -73,7 +73,7 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
         this.player.pause();
     }
 
-    async play(song: Song): Promise<void> {
+    async play(song: Song, forceBegin: boolean): Promise<void> {
         if (this.song && this.song.uri === song.uri) {
             this.player.resume();
         } else {
