@@ -6,6 +6,7 @@ import {SpotifyAuthenticationController} from "./spotify/SpotifyAuthenticationCo
 import {PlaybackMasterController} from "./playback/PlaybackMasterController";
 import {SearchController} from "./api/SearchController";
 import {ReportRequest} from "./api/requests/other/ReportRequest";
+import {Settings} from "../models/Settings";
 
 export class TSRIController {
     private status: InitializationStatus = defaultStatus;
@@ -15,9 +16,16 @@ export class TSRIController {
     private events: TSRIEvents;
     private search: SearchController;
     public reports: any = {spotifyReports: []};
+    private authenticated: boolean = false;
 
     public init(jwt: string, api: string, events: TSRIEvents) {
         this.events = events;
+        if (this.API) {
+            this.playback.setEvents(events);
+            events.enableSpotifyAuth(!this.authenticated);
+            events.initialized(this.status);
+            return;
+        }
         this.API = new APIConnectionController(api, jwt, {
             statusChanged: async status => {
                 this.status.api = status === 0;
@@ -28,11 +36,12 @@ export class TSRIController {
                 }
             }
         });
-        this.playback = new PlaybackMasterController(this.API, events, this.status);
+        this.playback = new PlaybackMasterController(this.API, this.events, this.status);
         this.search = new SearchController(this.API, this.playback.spotify);
         this.spotifyAuth = new SpotifyAuthenticationController(this.API, {
             statusChanged: this.spotifyStatus,
             spotifyAuthenticated: (authenticated: boolean, token?: string) => {
+                this.authenticated = authenticated;
                 this.e().enableSpotifyAuth(!authenticated);
                 if (token) this.playback.spotify.init(token);
             }
@@ -71,6 +80,8 @@ export class TSRIController {
 }
 
 const defaultEvents: TSRIEvents = {
+    settingsUpdate: function (p1: Settings) {
+    },
     queueUpdate: function (p1: Array<Song>) {
     },
     enableSpotifyAuth: function (p1: boolean) {
@@ -87,8 +98,6 @@ const defaultEvents: TSRIEvents = {
         console.log("SONG: " + p1.name)
     }, stop: function () {
         console.log("STOP")
-    }, volume: function (p1: number) {
-        console.log("VOLUME: " + p1)
     }
 };
 
