@@ -40,7 +40,6 @@ export class PlaybackMasterController {
         if (this.shouldPlay) events.play();
         else events.pause();
         let tempQueue = [...this.queue];
-        if(this.song) tempQueue.unshift(this.song);
         events.queueUpdate(tempQueue, this._history);
         events.song(this.song);
         events.settingsUpdate(this.settings);
