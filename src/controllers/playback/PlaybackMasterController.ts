@@ -26,6 +26,9 @@ export class PlaybackMasterController {
     private shouldPlay: boolean = false;
     private settings: Settings;
 
+    private volume: number = 0.6;
+    private volumeBalance: number = 0.5;
+
     constructor(private api: APIConnectionController, private frontendEvents: TSRIEvents, status: InitializationStatus) {
         this.posPredicter = new PositionPredicter(pos => this.frontendEvents.position(pos));
         this.spotify = new SpotifyPlaybackController(this.playbackProviderEvents(PlaybackProvider.SPOTIFY), api);
@@ -51,7 +54,9 @@ export class PlaybackMasterController {
         if (song) {
             if (this.song) this.pause();
             this.song = song;
-            this.getController(song.provider).play(song, forceBegin);
+            const controller = this.getController(song.provider);
+            controller.setVolume(this.volume, this.volumeBalance);
+            controller.play(song, forceBegin);
         } else if (this.song) {
             if (!this.firstPlayback && this.posPredicter.prediction !== 0)
                 this.getController(this.song.provider).resume();

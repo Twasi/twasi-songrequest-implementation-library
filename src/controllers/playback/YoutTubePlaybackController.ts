@@ -53,7 +53,10 @@ export class YoutTubePlaybackController extends PlaybackSlaveController {
         volumeBalance *= 2;
         volume = volume / 10 * 7.5;
         volume += volumeBalance * .25;
-        this.player.setVolume(volume * 100);
+        try {
+            this.player.setVolume(volume * 100);
+        } catch (e) {
+        }
     }
 
     resume(): void {
