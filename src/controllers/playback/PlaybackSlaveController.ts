@@ -7,7 +7,7 @@ export abstract class PlaybackSlaveController {
 
     public abstract seek(position: number): void;
 
-    public abstract setVolume(volume: number): void;
+    public abstract setVolume(volume: number, volumeBalance: number): void;
 
     public abstract resume(): void;
 

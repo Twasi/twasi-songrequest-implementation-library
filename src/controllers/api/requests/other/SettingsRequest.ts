@@ -1,13 +1,13 @@
 import {IAPIRequest} from "../../APIConnectionController";
+import {Settings} from "../../../../models/Settings";
 
-export const ReportRequest = (report: any): IAPIRequest => {
+export const SettingsRequest = (settings?: Settings): IAPIRequest => {
     return {
         topic: "twasi-songrequests/events",
         scope: "action",
         action: {
-            type: "report",
-            message: report.message,
-            report
+            type: "settings",
+            settings
         }
     }
 };

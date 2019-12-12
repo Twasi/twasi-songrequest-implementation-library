@@ -93,7 +93,11 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
         this.player.seek(this.song.duration * position);
     }
 
-    setVolume(volume: number): void {
+    setVolume(volume: number, volumeBalance: number): void {
+        volumeBalance -= .5;
+        volumeBalance *= -2;
+        volume = volume / 10 * 7.5;
+        volume += volumeBalance * .25;
         this.player.setVolume(volume);
     }
 

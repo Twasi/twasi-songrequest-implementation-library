@@ -33,6 +33,7 @@ export class TSRIController {
                 if (this.status.api) await this.spotifyAuth.get();
                 if (status === APIConnectionStatus.CONNECTED) {
                     this.loadQueue(false);
+                    await this.playback.setSettings();
                 }
             }
         });

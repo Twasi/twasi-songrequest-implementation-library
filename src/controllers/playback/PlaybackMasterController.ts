@@ -11,6 +11,7 @@ import {NextRequest} from "../api/requests/songrequests/NextRequest";
 import {GetQueueRequest} from "../api/requests/songrequests/GetQueueRequest";
 import {AddRequest} from "../api/requests/songrequests/AddRequest";
 import {Settings} from "../../models/Settings";
+import {SettingsRequest} from "../api/requests/other/SettingsRequest";
 
 export class PlaybackMasterController {
     private song: Song = null;
@@ -170,8 +171,26 @@ export class PlaybackMasterController {
         this.setQueue(result.queue, result.history, play);
     }
 
-    public async setVolume() {
+    public async setVolume(volume: number) {
+        await this.setSettings({volume});
+    }
 
+    public async setVolumeBalance(volumeBalance: number) {
+        await this.setSettings({volumeBalance});
+    }
+
+    public async setSettings(settings?: Settings) {
+        const response = await this.api.requests.request(SettingsRequest(settings));
+        if (response.status === 'success') {
+            this.handleSettings(response.result);
+        }
+        return response;
+    }
+
+    private handleSettings(result: any) {
+        this.frontendEvents.settingsUpdate(result);
+        this.spotify.setVolume(result.volume, result.volumeBalance);
+        this.youtube.setVolume(result.volume, result.volumeBalance);
     }
 }
 

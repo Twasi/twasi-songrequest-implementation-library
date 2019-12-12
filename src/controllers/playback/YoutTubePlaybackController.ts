@@ -48,7 +48,11 @@ export class YoutTubePlaybackController extends PlaybackSlaveController {
         this.player.seekTo(this.player.getDuration() * position);
     }
 
-    setVolume(volume: number): void {
+    setVolume(volume: number, volumeBalance: number): void {
+        volumeBalance -= .5;
+        volumeBalance *= 2;
+        volume = volume / 10 * 7.5;
+        volume += volumeBalance * .25;
         this.player.setVolume(volume * 100);
     }
 
