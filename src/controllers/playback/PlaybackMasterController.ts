@@ -209,7 +209,7 @@ class PositionPredicter {
     constructor(private callback: (position: number) => void) {
         const predict = () => {
             this.predictNow();
-            setTimeout(predict, 500);
+            setTimeout(predict, 200);
         };
         predict();
     }
