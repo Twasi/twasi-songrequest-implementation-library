@@ -12,6 +12,7 @@ import {GetQueueRequest} from "../api/requests/songrequests/GetQueueRequest";
 import {AddRequest} from "../api/requests/songrequests/AddRequest";
 import {Settings} from "../../models/Settings";
 import {SettingsRequest} from "../api/requests/other/SettingsRequest";
+import {PlaybackPreviewController} from "./playbackpreview/PlaybackPreviewController";
 
 export class PlaybackMasterController {
     private song: Song = null;
@@ -23,14 +24,16 @@ export class PlaybackMasterController {
 
     public readonly spotify: SpotifyPlaybackController;
     public readonly youtube: YouTubePlaybackController;
-    private shouldPlay: boolean = false;
+    public shouldPlay: boolean = false;
     private settings: Settings;
+    private preview: PlaybackPreviewController;
 
     constructor(private api: APIConnectionController, private frontendEvents: TSRIEvents, status: InitializationStatus) {
         this.posPredicter = new PositionPredicter(pos => this.frontendEvents.position(pos));
         this.spotify = new SpotifyPlaybackController(this.playbackProviderEvents(PlaybackProvider.SPOTIFY), api);
         this.youtube = new YouTubePlaybackController(this.playbackProviderEvents(PlaybackProvider.YOUTUBE), api, status.youtubeApi);
         api.on("queue", (queueUpdate) => this.setQueue(queueUpdate.queue, queueUpdate.history, this.shouldPlay));
+        this.preview = new PlaybackPreviewController(null, this.spotify, this.youtube, this);
     }
 
     public setEvents(events: TSRIEvents) {

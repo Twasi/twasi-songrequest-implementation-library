@@ -4,6 +4,7 @@ export interface Song {
     requester: Requester;
     timestamp: number;
     uri: string;
+    url: string;
     provider: PlaybackProvider,
     name: string,
     artists: Array<string>,
