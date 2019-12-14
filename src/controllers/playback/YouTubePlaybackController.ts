@@ -2,7 +2,7 @@ import {PlaybackSlaveController, PlaybackSlaveEvents} from "./PlaybackSlaveContr
 import {Song} from "../../models/Song";
 import {APIConnectionController} from "../api/APIConnectionController";
 
-export class YoutTubePlaybackController extends PlaybackSlaveController {
+export class YouTubePlaybackController extends PlaybackSlaveController {
     public readonly player: any;
 
     constructor(events: PlaybackSlaveEvents, api: APIConnectionController, youtubeApi: boolean) {
@@ -51,8 +51,9 @@ export class YoutTubePlaybackController extends PlaybackSlaveController {
     setVolume(volume: number, volumeBalance: number): void {
         volumeBalance -= .5;
         volumeBalance *= 2;
-        volume = volume / 10 * 7.5;
-        volume += volumeBalance * .25;
+        volume = volume / 10 * 5;
+        volume += (volume + .5) * volumeBalance * .5;
+        if (volume < 0) volume = 0;
         try {
             this.player.setVolume(volume * 100);
         } catch (e) {
