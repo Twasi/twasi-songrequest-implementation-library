@@ -1,5 +1,5 @@
 import {SpotifyPlaybackController} from "./SpotifyPlaybackController";
-import {YoutTubePlaybackController} from "./YoutTubePlaybackController";
+import {YouTubePlaybackController} from "./YouTubePlaybackController";
 import {APIConnectionController} from "../api/APIConnectionController";
 import {Song} from "../../models/Song";
 import {PlaybackProvider} from "../../models/PlaybackProvider";
@@ -12,6 +12,7 @@ import {GetQueueRequest} from "../api/requests/songrequests/GetQueueRequest";
 import {AddRequest} from "../api/requests/songrequests/AddRequest";
 import {Settings} from "../../models/Settings";
 import {SettingsRequest} from "../api/requests/other/SettingsRequest";
+import {PlaybackPreviewController} from "./playbackpreview/PlaybackPreviewController";
 
 export class PlaybackMasterController {
     private song: Song = null;
@@ -22,21 +23,17 @@ export class PlaybackMasterController {
     private posPredicter: PositionPredicter;
 
     public readonly spotify: SpotifyPlaybackController;
-    public readonly youtube: YoutTubePlaybackController;
-    private shouldPlay: boolean = false;
+    public readonly youtube: YouTubePlaybackController;
+    public shouldPlay: boolean = false;
     private settings: Settings;
-
-    private volume: number = 0.6;
-    private volumeBalance: number = 0.5;
+    private preview: PlaybackPreviewController;
 
     constructor(private api: APIConnectionController, private frontendEvents: TSRIEvents, status: InitializationStatus) {
         this.posPredicter = new PositionPredicter(pos => this.frontendEvents.position(pos));
         this.spotify = new SpotifyPlaybackController(this.playbackProviderEvents(PlaybackProvider.SPOTIFY), api);
-        this.youtube = new YoutTubePlaybackController(this.playbackProviderEvents(PlaybackProvider.YOUTUBE), api, status.youtubeApi);
+        this.youtube = new YouTubePlaybackController(this.playbackProviderEvents(PlaybackProvider.YOUTUBE), api, status.youtubeApi);
         api.on("queue", (queueUpdate) => this.setQueue(queueUpdate.queue, queueUpdate.history, this.shouldPlay));
-        api.on("settings", (settings) => {
-            this.settings = settings;
-        });
+        this.preview = new PlaybackPreviewController(null, this.spotify, this.youtube, this);
     }
 
     public setEvents(events: TSRIEvents) {
@@ -55,7 +52,7 @@ export class PlaybackMasterController {
             if (this.song) this.pause();
             this.song = song;
             const controller = this.getController(song.provider);
-            controller.setVolume(this.volume, this.volumeBalance);
+            controller.setVolume(this.settings.volume, this.settings.volumeBalance);
             controller.play(song, forceBegin);
         } else if (this.song) {
             if (!this.firstPlayback && this.posPredicter.prediction !== 0)
@@ -192,10 +189,11 @@ export class PlaybackMasterController {
         return response;
     }
 
-    private handleSettings(result: any) {
+    private handleSettings(result: Settings) {
         this.frontendEvents.settingsUpdate(result);
         this.spotify.setVolume(result.volume, result.volumeBalance);
         this.youtube.setVolume(result.volume, result.volumeBalance);
+        this.settings = result;
     }
 }
 
