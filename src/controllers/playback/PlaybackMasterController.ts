@@ -33,7 +33,7 @@ export class PlaybackMasterController {
         this.spotify = new SpotifyPlaybackController(this.playbackProviderEvents(PlaybackProvider.SPOTIFY), api);
         this.youtube = new YouTubePlaybackController(this.playbackProviderEvents(PlaybackProvider.YOUTUBE), api, status.youtubeApi);
         api.on("queue", (queueUpdate) => this.setQueue(queueUpdate.queue, queueUpdate.history, this.shouldPlay));
-        this.preview = new PlaybackPreviewController(null, this.spotify, this.youtube, this);
+        this.preview = new PlaybackPreviewController(null, this);
     }
 
     public setEvents(events: TSRIEvents) {

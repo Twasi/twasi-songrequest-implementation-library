@@ -1,7 +1,6 @@
 import {PlaybackPreviewEvents} from "./PlaybackPreviewEvents";
-import {SpotifyPlaybackController} from "../SpotifyPlaybackController";
-import {YouTubePlaybackController} from "../YouTubePlaybackController";
 import {PlaybackMasterController} from "../PlaybackMasterController";
+import {PlaybackProvider} from "../../../models/PlaybackProvider";
 
 export interface PreviewSong {
     song: {
@@ -66,30 +65,31 @@ export class PlaybackPreviewController {
 
     constructor(
         private events: PlaybackPreviewEvents,
-        private spotify: SpotifyPlaybackController,
-        private youtube: YouTubePlaybackController,
         private master: PlaybackMasterController
     ) {
-
     }
 
     public setEvents(events: PlaybackPreviewEvents) {
-        this.events = events;
+        this.events = events ? events : {
+            canPlay: console.log,
+            song: console.log
+        };
     }
 
     public async startPreview() {
         if (this.master.shouldPlay) return;
         const randomPreview: PreviewSong = PlaybackPreviewController.getRandomPreview();
-        // @ts-ignore
-        await this.spotify.play({uri: randomPreview.song.spotify});
-        setTimeout(() => {
-            this.spotify.pause();
-            // @ts-ignore
-            this.youtube.play({uri: randomPreview.song.youtube}, true);
-            setTimeout(() => {
-                this.youtube.pause();
-            }, randomPreview.duration)
-        }, randomPreview.duration)
+        this.events.canPlay(false);
+        this.events.song(randomPreview, PlaybackProvider.SPOTIFY);
+        await this.master.spotify.preview(randomPreview);
+        this.events.song(randomPreview, PlaybackProvider.YOUTUBE);
+        await this.master.youtube.preview(randomPreview);
+        this.events.canPlay(true);
+        this.events.song(null, PlaybackProvider.NONE);
+    }
+
+    public canPlay(can: boolean) {
+        this.events.canPlay(can);
     }
 
     private static getRandomPreview(): PreviewSong {

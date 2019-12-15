@@ -3,6 +3,8 @@ import {Song} from "../../models/Song";
 import {PlaybackSlaveController, PlaybackSlaveEvents} from "./PlaybackSlaveController";
 import {TSRIWindow} from "../../models/TSRIWindow";
 import {SetVolumeRequest} from "../api/requests/other/SetVolumeRequest";
+import {PreviewSong} from "./playbackpreview/PlaybackPreviewController";
+import {sleep} from "../../TSRI";
 
 declare const Spotify: any;
 
@@ -78,14 +80,17 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
         this.player.pause();
     }
 
-    async play(song: Song, forceBegin: boolean): Promise<void> {
+    async play(song: Song, forceBegin: boolean, start?: number): Promise<void> {
         if (this.song && this.song.uri === song.uri) {
             this.player.resume();
         } else {
             this.song = song;
+            const body: any = {uris: [song.uri]};
+            if (forceBegin) body.position_ms = 0;
+            else if (start) body.position_ms = start;
             await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.id}`, {
                 method: 'PUT',
-                body: JSON.stringify({uris: [song.uri], position_ms: 0}),
+                body: JSON.stringify(body),
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${this.token}`
@@ -121,4 +126,10 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
         this.player.resume();
     }
 
+    async preview(song: PreviewSong) {
+        // @ts-ignore
+        await this.play({uri: song.song.spotify}, false, song.startAt.spotify);
+        await sleep(song.duration);
+        await this.pause();
+    }
 }

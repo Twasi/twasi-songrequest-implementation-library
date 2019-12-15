@@ -1,6 +1,8 @@
 import {PlaybackSlaveController, PlaybackSlaveEvents} from "./PlaybackSlaveController";
 import {Song} from "../../models/Song";
 import {APIConnectionController} from "../api/APIConnectionController";
+import {PreviewSong} from "./playbackpreview/PlaybackPreviewController";
+import {sleep} from "../../TSRI";
 
 export class YouTubePlaybackController extends PlaybackSlaveController {
     public readonly player: any;
@@ -64,4 +66,9 @@ export class YouTubePlaybackController extends PlaybackSlaveController {
         this.player.playVideo();
     }
 
+    async preview(song: PreviewSong) {
+        this.player.loadVideoById(song.song.youtube, Math.round(song.startAt.youtube / 1000));
+        await sleep(song.duration);
+        this.player.pause();
+    }
 }
