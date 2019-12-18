@@ -4,5 +4,5 @@ import {PreviewSong} from "./PlaybackPreviewController";
 
 export interface PlaybackPreviewEvents {
     canPlay: (can: boolean) => void,
-    song: (song: PreviewSong, provider?: PlaybackProvider) => void,
+    song: (song: PreviewSong, provider: PlaybackProvider) => void,
 }
