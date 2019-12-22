@@ -75,7 +75,7 @@ export class TSRIController {
     }
 
     public async report(reason: string) {
-        this.reports.reason = reason;
+        this.reports.message = reason;
         await this.API.requests.request(ReportRequest(this.reports));
     }
 }
