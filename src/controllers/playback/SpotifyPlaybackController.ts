@@ -15,14 +15,21 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
     token: string;
     private playing: boolean = false;
     private volume: number;
+    private reInit: boolean = false;
 
     constructor(protected events: PlaybackSlaveEvents, private api: APIConnectionController) {
         super(events);
     }
 
-    public init(token: string) {
-        if (this.player) this.player.disconnect();
+    public async init(token: string, force: boolean = false) {
         this.token = token;
+        if (this.player && !force) {
+            this.reInit = true;
+            return;
+        } else if (this.player) {
+            await this.player.disconnect();
+        }
+        this.reInit = false;
         const player = new Spotify.Player({
             name: 'Twasi-Panel',
             getOAuthToken: (cb: (token: string) => void) => {
@@ -68,12 +75,14 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
         });
 
         // Not Ready
-        player.addListener('not_ready', async ({device_id}: { device_id: string }) => {
+        player.addListener('not_ready', async () => {
             // @ts-ignore
             await (window as TSRIWindow).TSRI.spotifyAuth.refresh();
         });
         this.player = player;
-        player.connect();
+        await player.connect();
+
+        if (this.song) await this.play(this.song, true);
     }
 
     pause(): void {
@@ -81,6 +90,11 @@ export class SpotifyPlaybackController extends PlaybackSlaveController {
     }
 
     async play(song: Song, forceBegin: boolean, start?: number): Promise<void> {
+        if (this.reInit) {
+            this.song = song;
+            this.init(this.token, true);
+            return;
+        }
         if (this.song && this.song.uri === song.uri) {
             this.player.resume();
         } else {
